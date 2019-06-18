@@ -1,0 +1,14 @@
+{
+  "name": "spider",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "num test"
+  },
+  "author": "raymond",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.88.0"
+  }
+}
