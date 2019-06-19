@@ -43,6 +43,7 @@ let hd = head_user_agent[randN]
 
 Option["User-Agent"] = hd;
 const filtersDefault = ['seller', 'price', 'review', 'title', 'score'];
+
 function _doRequest(url) {
     return proRequest.doGet(
         url,
@@ -61,49 +62,45 @@ function getUrlStr(keyWords, type = true) {
 
 function getContentByKeys(keyWords) {
     let url = getUrlStr(keyWords);
-    return _doRequest(url);
+    return _doRequest(url).then(((resp) => {
+        return resp.body;
+    })).then((html) => {
+        // <span>1-48 of over 100,000 results for</span>
+        return htmlParsers.getSearchItemslinks(html);
+    });
 }
 
-function log(html) {
-    // fs.open('out2_1.html');
-    const out = fs.createWriteStream('out2_1.html');
-    html.pipe(html).pipe(out);
-
-}
 function getProductCotent(url, filters = []) {
     if (!filters.length) {
         filters = filtersDefault;
-    }    
-    return proRequest.doGet(
-        url,
-        Option
-    ).then((resp) => {
-        let html = resp.body;
-        // console.log(html)
-        if (!filters) {
-            return html;
-        }
-        return filters.map((item) => {
-            switch (item) {
-                case 'seller': return htmlParsers.getSeller(html); break;
-                case 'score': return htmlParsers.getScore(html); break;
-                case 'title': return htmlParsers.getTile(html); break;
-                case 'price': return htmlParsers.getPrice(html); break;
-                case 'review': return htmlParsers.getReview(html); break;
+    }
+    return _doRequest(url)
+        .then((resp) => {
+            let html = resp.body;
+            if (!filters) {
+                return html;
             }
+            return filters.map((item) => {
+                switch (item) {
+                    case 'seller': return htmlParsers.getSeller(html); break;
+                    case 'score': return htmlParsers.getScore(html); break;
+                    case 'title': return htmlParsers.getTile(html); break;
+                    case 'price': return htmlParsers.getPrice(html); break;
+                    case 'review': return htmlParsers.getReview(html); break;
+                }
 
+            });
+        }).then((data) => {
+            let output = {
+                url: url,
+                asin: url.split('/').pop()
+            }
+            data.forEach((element, num) => {
+                let key = filters[num];
+                output[key] = element;
+            });
+            return output;
         });
-    }).then((data) => {
-        let output = {
-            url: url,
-            asin: url.split('/').pop()
-        }        
-        data.forEach((element, num) => {
-            let key = filters[num];
-            output[key] = element;
-        });
-        return output;
-    });
 }
 
 
